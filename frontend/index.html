@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -182,9 +182,7 @@ th, td {
 </main>
 
 <script>
-// Your deployed Render backend URL
 const API = "https://ai-security-log-backend.onrender.com";
-
 const $ = id => document.getElementById(id);
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
@@ -209,6 +207,7 @@ $("sample").addEventListener("click", async () => {
 
   try {
     const response = await fetch(`${API}/sample.log`);
+
     if (!response.ok) {
       throw new Error(`Could not load sample logs (HTTP ${response.status}).`);
     }
@@ -234,24 +233,34 @@ $("go").addEventListener("click", async () => {
     return;
   }
 
-  const formData = new FormData();
-
-  if (selectedFile) {
-    formData.append("file", selectedFile);
-  } else {
-    formData.append("logs", $("logs").value);
-  }
-
   $("go").disabled = true;
   $("go").textContent = "Analyzing...";
 
   try {
-    const response = await fetch(`${API}/api/analyze`, {
-      method: "POST",
-      body: formData
-    });
+    let response;
 
-    // Read the response as text first, so HTML errors are identified clearly.
+    if (selectedFile) {
+      // File uploads use multipart/form-data.
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      response = await fetch(`${API}/api/analyze`, {
+        method: "POST",
+        body: formData
+      });
+    } else {
+      // Pasted logs use JSON instead of multipart/form-data.
+      response = await fetch(`${API}/api/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          logs: $("logs").value
+        })
+      });
+    }
+
     const responseText = await response.text();
     let data;
 
@@ -259,8 +268,9 @@ $("go").addEventListener("click", async () => {
       data = JSON.parse(responseText);
     } catch {
       throw new Error(
-        `Backend returned a non-JSON response (HTTP ${response.status}). ` +
-        "Open the Render backend Logs to check the server error."
+        `Server returned a non-JSON response (HTTP ${response.status}). ` +
+        "If this is 403, the request may be blocked by Cloudflare. " +
+        "Check the response in your browser's Network tab."
       );
     }
 
@@ -336,3 +346,4 @@ function render(data) {
 </script>
 </body>
 </html>
+```
