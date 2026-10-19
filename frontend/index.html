@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,49 +6,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Security Log Analyzer</title>
 <style>
-:root{--bg:#f3f5f4;--panel:#fff;--ink:#14201c;--mute:#5d6b66;--line:#d5dcd9;--accent:#0f6b52;--onaccent:#fff;
---crit:#b3261e;--high:#c2570c;--med:#a07a00;--low:#3b6ea5}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1715;--panel:#17221f;--ink:#e6efeb;--mute:#93a39d;--line:#2a3a35;--accent:#4cc9a0;--onaccent:#0f1715;--crit:#ff8a80;--high:#ffab6b;--med:#e6c24d;--low:#8ab8e8}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,sans-serif}
-main{max-width:1000px;margin:0 auto;padding:28px 18px 60px}
-h1{font-size:1.7rem;margin:0 0 4px}
-p.sub{color:var(--mute);margin:0 0 22px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:18px}
-textarea{width:100%;min-height:150px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;font:12.5px/1.45 ui-monospace,Consolas,monospace;resize:vertical}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-button,label.btn{background:var(--accent);color:var(--onaccent);border:0;border-radius:6px;padding:9px 16px;font:inherit;cursor:pointer}
-button.ghost,label.btn{background:transparent;color:var(--ink);border:1px solid var(--line)}
-button:focus-visible,label.btn:focus-within,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-button:disabled{opacity:.5;cursor:wait}
-#fname{color:var(--mute);font-size:.9rem}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-.stat b{display:block;font-size:1.6rem}
-.stat span{color:var(--mute);font-size:.85rem}
-.inc{border-left:4px solid var(--line);padding:10px 14px;margin:12px 0;background:var(--bg);border-radius:0 6px 6px 0}
-.inc.Critical{border-color:var(--crit)}.inc.High{border-color:var(--high)}.inc.Medium{border-color:var(--med)}.inc.Low{border-color:var(--low)}
-.inc h3{margin:0 0 4px;font-size:1rem}
-.tag{font-size:.78rem;font-weight:600;padding:1px 8px;border-radius:10px;border:1px solid currentColor;margin-left:6px}
-.Critical .tag{color:var(--crit)}.High .tag{color:var(--high)}.Medium .tag{color:var(--med)}.Low .tag{color:var(--low)}
-code{display:block;font:12px/1.4 ui-monospace,Consolas,monospace;color:var(--mute);overflow-x:auto;white-space:pre;margin-top:4px}
-.fix{margin-top:6px}
-table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
-.tw{overflow-x:auto}
-#summary{white-space:pre-wrap}
-.err{color:var(--crit)}
-.hidden{display:none}
+:root {
+  color-scheme: light dark;
+  --bg: #f3f5f4;
+  --panel: #fff;
+  --ink: #14201c;
+  --mute: #5d6b66;
+  --line: #d5dcd9;
+  --accent: #0f6b52;
+  --onaccent: #fff;
+  --crit: #b3261e;
+  --high: #c2570c;
+  --med: #a07a00;
+  --low: #3b6ea5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1715;
+    --panel: #17221f;
+    --ink: #e6efeb;
+    --mute: #93a39d;
+    --line: #2a3a35;
+    --accent: #4cc9a0;
+    --onaccent: #0f1715;
+    --crit: #ff8a80;
+    --high: #ffab6b;
+    --med: #e6c24d;
+    --low: #8ab8e8;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 "Segoe UI", system-ui, sans-serif;
+}
+main { max-width: 1000px; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-size: 1.7rem; margin: 0 0 4px; }
+p.sub { color: var(--mute); margin: 0 0 22px; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+textarea {
+  width: 100%;
+  min-height: 150px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  font: 12.5px/1.45 ui-monospace, Consolas, monospace;
+  resize: vertical;
+}
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 12px;
+}
+button, label.btn {
+  background: var(--accent);
+  color: var(--onaccent);
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+button.ghost, label.btn {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+button:focus-visible, label.btn:focus-within, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+button:disabled { opacity: .5; cursor: wait; }
+#fname { color: var(--mute); font-size: .9rem; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.stat b { display: block; font-size: 1.6rem; }
+.stat span { color: var(--mute); font-size: .85rem; }
+.inc {
+  border-left: 4px solid var(--line);
+  padding: 10px 14px;
+  margin: 12px 0;
+  background: var(--bg);
+  border-radius: 0 6px 6px 0;
+}
+.inc.Critical { border-color: var(--crit); }
+.inc.High { border-color: var(--high); }
+.inc.Medium { border-color: var(--med); }
+.inc.Low { border-color: var(--low); }
+.inc h3 { margin: 0 0 4px; font-size: 1rem; }
+.tag {
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+  margin-left: 6px;
+}
+.Critical .tag { color: var(--crit); }
+.High .tag { color: var(--high); }
+.Medium .tag { color: var(--med); }
+.Low .tag { color: var(--low); }
+code {
+  display: block;
+  font: 12px/1.4 ui-monospace, Consolas, monospace;
+  color: var(--mute);
+  overflow-x: auto;
+  white-space: pre;
+  margin-top: 4px;
+}
+.fix { margin-top: 6px; }
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.tw { overflow-x: auto; }
+#summary { white-space: pre-wrap; }
+.err { color: var(--crit); overflow-wrap: anywhere; }
+.hidden { display: none; }
 </style>
 </head>
 <body>
 <main>
   <h1>AI Security Log Analyzer</h1>
-  <p class="sub">Upload server or application logs to find login attacks, SQL injection and suspicious IPs, with recommended actions.</p>
+  <p class="sub">
+    Upload server or application logs to find login attacks, SQL injection
+    and suspicious IPs, with recommended actions.
+  </p>
 
   <section class="panel">
-    <textarea id="logs" aria-label="Log text" placeholder="Paste log lines here, or choose a file below."></textarea>
+    <textarea id="logs" aria-label="Log text"
+      placeholder="Paste log lines here, or choose a file below."></textarea>
     <div class="row">
-      <label class="btn">Choose log file<input id="file" type="file" accept=".log,.txt,text/plain" hidden></label>
+      <label class="btn">
+        Choose log file
+        <input id="file" type="file" accept=".log,.txt,text/plain" hidden>
+      </label>
       <span id="fname"></span>
       <button id="go">Analyze logs</button>
       <button class="ghost" id="sample">Load sample logs</button>
@@ -56,55 +166,171 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
   </section>
 
   <div id="out" class="hidden">
-    <section class="panel"><h2>Summary <small id="src" style="color:var(--mute);font-weight:400"></small></h2><div id="summary"></div></section>
+    <section class="panel">
+      <h2>Summary
+        <small id="src" style="color:var(--mute);font-weight:400"></small>
+      </h2>
+      <div id="summary"></div>
+    </section>
     <section class="panel"><div class="stats" id="stats"></div></section>
     <section class="panel"><h2>Incidents</h2><div id="incs"></div></section>
-    <section class="panel"><h2>Most active IPs</h2><div class="tw"><table id="ips"></table></div></section>
+    <section class="panel">
+      <h2>Most active IPs</h2>
+      <div class="tw"><table id="ips"></table></div>
+    </section>
   </div>
 </main>
+
 <script>
-// Same-origin when served by Flask; falls back to localhost:5000 if the page is opened from another dev server.
-const API = location.port && location.port !== "5000" ? "http://localhost:5000" : "";
+// Your deployed Render backend URL
+const API = "https://ai-security-log-backend.onrender.com";
+
 const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let file = null;
 
-$("file").onchange = e => { file = e.target.files[0] || null; $("fname").textContent = file ? file.name : ""; };
+const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+}[c]));
 
-$("sample").onclick = async () => {
-  try { $("logs").value = await (await fetch(API + "/sample.log")).text(); file = null; $("fname").textContent = ""; }
-  catch { $("err").textContent = "Sample not available. Paste your own logs instead."; }
-};
+let selectedFile = null;
 
-$("go").onclick = async () => {
+$("file").addEventListener("change", event => {
+  selectedFile = event.target.files[0] || null;
+  $("fname").textContent = selectedFile ? selectedFile.name : "";
   $("err").textContent = "";
-  if (!file && !$("logs").value.trim()) { $("err").textContent = "Paste logs or choose a file first."; return; }
-  const fd = new FormData();
-  if (file) fd.append("file", file); else fd.append("logs", $("logs").value);
-  $("go").disabled = true; $("go").textContent = "Analyzing...";
-  try {
-    const r = await fetch(API + "/api/analyze", { method: "POST", body: fd });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || "Analysis failed");
-    render(d);
-  } catch (e) { $("err").textContent = "Could not analyze: " + e.message + ". Is the backend running on port 5000?"; }
-  $("go").disabled = false; $("go").textContent = "Analyze logs";
-};
+});
 
-function render(d) {
+$("sample").addEventListener("click", async () => {
+  $("err").textContent = "";
+  $("sample").disabled = true;
+
+  try {
+    const response = await fetch(`${API}/sample.log`);
+    if (!response.ok) {
+      throw new Error(`Could not load sample logs (HTTP ${response.status}).`);
+    }
+
+    $("logs").value = await response.text();
+    selectedFile = null;
+    $("file").value = "";
+    $("fname").textContent = "";
+  } catch (error) {
+    $("err").textContent =
+      "Could not load sample logs: " + error.message +
+      " You can paste log lines manually.";
+  } finally {
+    $("sample").disabled = false;
+  }
+});
+
+$("go").addEventListener("click", async () => {
+  $("err").textContent = "";
+
+  if (!selectedFile && !$("logs").value.trim()) {
+    $("err").textContent = "Paste logs or choose a file first.";
+    return;
+  }
+
+  const formData = new FormData();
+
+  if (selectedFile) {
+    formData.append("file", selectedFile);
+  } else {
+    formData.append("logs", $("logs").value);
+  }
+
+  $("go").disabled = true;
+  $("go").textContent = "Analyzing...";
+
+  try {
+    const response = await fetch(`${API}/api/analyze`, {
+      method: "POST",
+      body: formData
+    });
+
+    // Read the response as text first, so HTML errors are identified clearly.
+    const responseText = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        `Backend returned a non-JSON response (HTTP ${response.status}). ` +
+        "Open the Render backend Logs to check the server error."
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || `Request failed (HTTP ${response.status}).`);
+    }
+
+    if (!data.stats || !Array.isArray(data.incidents) ||
+        !Array.isArray(data.top_ips) || !data.summary) {
+      throw new Error("The backend response is missing expected analysis data.");
+    }
+
+    render(data);
+  } catch (error) {
+    $("err").textContent = "Could not analyze logs: " + error.message;
+  } finally {
+    $("go").disabled = false;
+    $("go").textContent = "Analyze logs";
+  }
+});
+
+function render(data) {
   $("out").classList.remove("hidden");
-  $("summary").textContent = d.summary.text;
-  $("src").textContent = "(" + d.summary.source + ")";
-  const s = d.stats, sv = s.by_severity || {};
-  $("stats").innerHTML = [["Log lines", s.total_lines], ["Unique IPs", s.unique_ips], ["Incidents", s.incidents],
-    ["Critical / High", (sv.Critical || 0) + " / " + (sv.High || 0)]].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
-  $("incs").innerHTML = d.incidents.length ? d.incidents.map(i => `
-    <div class="inc ${i.severity}"><h3>${esc(i.type)}<span class="tag">${i.severity}</span></h3>
-    <div>Source IP <strong>${esc(i.ip)}</strong> &middot; ${i.count} event(s)</div>
-    ${i.evidence.map(e => `<code>${esc(e)}</code>`).join("")}
-    <div class="fix"><strong>Action:</strong> ${esc(i.recommendation)}</div></div>`).join("") : "<p>No suspicious activity found.</p>";
-  $("ips").innerHTML = "<tr><th>IP address</th><th>Requests</th><th>Failed logins</th></tr>" +
-    d.top_ips.map(t => `<tr><td>${esc(t.ip)}</td><td>${t.requests}</td><td>${t.failed_logins}</td></tr>`).join("");
+  $("summary").textContent = data.summary.text || "No summary available.";
+  $("src").textContent = "(" + (data.summary.source || "unknown") + ")";
+
+  const stats = data.stats;
+  const severity = stats.by_severity || {};
+
+  const cards = [
+    ["Log lines", stats.total_lines],
+    ["Unique IPs", stats.unique_ips],
+    ["Incidents", stats.incidents],
+    ["Critical / High",
+      `${severity.Critical || 0} / ${severity.High || 0}`]
+  ];
+
+  $("stats").innerHTML = cards.map(([label, value]) =>
+    `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`
+  ).join("");
+
+  $("incs").innerHTML = data.incidents.length
+    ? data.incidents.map(incident => `
+      <div class="inc ${esc(incident.severity)}">
+        <h3>${esc(incident.type)}
+          <span class="tag">${esc(incident.severity)}</span>
+        </h3>
+        <div>Source IP <strong>${esc(incident.ip)}</strong>
+          &middot; ${esc(incident.count)} event(s)
+        </div>
+        ${(incident.evidence || []).map(evidence =>
+          `<code>${esc(evidence)}</code>`
+        ).join("")}
+        <div class="fix">
+          <strong>Action:</strong> ${esc(incident.recommendation)}
+        </div>
+      </div>
+    `).join("")
+    : "<p>No suspicious activity found.</p>";
+
+  $("ips").innerHTML =
+    "<tr><th>IP address</th><th>Requests</th><th>Failed logins</th></tr>" +
+    data.top_ips.map(ip => `
+      <tr>
+        <td>${esc(ip.ip)}</td>
+        <td>${esc(ip.requests)}</td>
+        <td>${esc(ip.failed_logins)}</td>
+      </tr>
+    `).join("");
+
   $("out").scrollIntoView({ behavior: "smooth" });
 }
 </script>
