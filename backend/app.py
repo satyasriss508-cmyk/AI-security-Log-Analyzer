@@ -38,13 +38,13 @@ def analyze_route():
     result["summary"] = summarize(result)
     return jsonify(result)
 
-
 @app.get("/api/analyze-sample")
 def analyze_sample():
-    sample_path = Path(__file__).resolve().parent / "sample.log"
+    project_dir = Path(__file__).resolve().parent.parent
+    sample_path = project_dir / "sample_logs" / "sample.log"
 
-    if not sample_path.exists():
-        return jsonify(error="sample.log not found in backend folder"), 404
+    if not sample_path.is_file():
+        return jsonify(error=f"Sample file not found at {sample_path}"), 404
 
     text = sample_path.read_text(encoding="utf-8", errors="ignore")
     result = analyze(text)
