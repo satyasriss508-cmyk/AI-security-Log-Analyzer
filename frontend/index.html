@@ -115,6 +115,9 @@ code {
 }
 .fix { margin-top:8px; }
 
+.status { color:var(--mute); margin:10px 0 0; min-height:1.4em; }
+.hint { color:var(--mute); font-size:.85rem; margin:8px 0 0; }
+.drop.over { outline:2px dashed var(--accent); outline-offset:-6px; }
 table { width:100%; border-collapse:collapse; }
 th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
 .tw { overflow-x:auto; }
@@ -137,7 +140,7 @@ th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
     and suspicious IPs, with recommended actions.
   </p>
 
-  <section class="panel noprint">
+  <section class="panel noprint drop" id="dropzone">
     <textarea id="logs" aria-label="Log text"
       placeholder="Paste log lines here, or choose a file below."></textarea>
     <div class="row">
@@ -148,6 +151,8 @@ th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
       <button id="go">Analyze logs</button>
       <button class="ghost" id="sample">Analyze sample logs</button>
     </div>
+    <p class="hint">Tip: you can also drag and drop a .log file onto this box.</p>
+    <p id="status" class="status" role="status"></p>
     <p id="err" class="err" role="alert"></p>
   </section>
 
@@ -231,6 +236,39 @@ $("file").addEventListener("change", event => {
   $("err").textContent = "";
 });
 
+// Drag and drop a log file onto the input panel
+const dz = $("dropzone");
+const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dz.classList.add("over");
+}));
+["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dz.classList.remove("over");
+}));
+dz.addEventListener("drop", e => {
+  if (!hasFiles(e)) return;
+  const f = e.dataTransfer.files[0];
+  if (f) { selectedFile = f; $("fname").textContent = f.name; $("err").textContent = ""; }
+});
+
+// Status line, with a hint when the free server is slow to wake up
+let slowTimer = null;
+function startWait() {
+  $("status").textContent = "Analyzing...";
+  slowTimer = setTimeout(() => {
+    $("status").textContent =
+      "Still working. The free server may be waking up, which can take up to a minute on the first request.";
+  }, 4000);
+}
+function endWait(msg = "") {
+  clearTimeout(slowTimer);
+  $("status").textContent = msg;
+}
+
 async function getResults(response) {
   const text = await response.text();
   let data;
@@ -246,14 +284,17 @@ async function getResults(response) {
 $("sample").addEventListener("click", async () => {
   $("err").textContent = "";
   $("sample").disabled = true;
+  startWait();
   try {
     const response = await fetch(`${API}/api/analyze-sample`);
     await getResults(response);
     selectedFile = null;
     $("file").value = "";
     $("fname").textContent = "";
-    $("logs").value = "Built-in sample logs analyzed. Results are displayed below.";
+    $("logs").value = "";
+    endWait("Showing results for the built-in sample logs.");
   } catch (error) {
+    endWait();
     $("err").textContent = "Could not analyze sample logs: " + error.message;
   } finally {
     $("sample").disabled = false;
@@ -268,6 +309,7 @@ $("go").addEventListener("click", async () => {
   }
   $("go").disabled = true;
   $("go").textContent = "Analyzing...";
+  startWait();
   try {
     const logText = selectedFile ? await selectedFile.text() : $("logs").value;
     if (!logText.trim()) throw new Error("The selected file is empty.");
@@ -277,7 +319,9 @@ $("go").addEventListener("click", async () => {
       body: JSON.stringify({ logs_b64: toBase64(logText) })
     });
     await getResults(response);
+    endWait(selectedFile ? `Showing results for ${selectedFile.name}.` : "Showing results for the pasted logs.");
   } catch (error) {
+    endWait();
     $("err").textContent = "Could not analyze logs: " + error.message;
   } finally {
     $("go").disabled = false;
