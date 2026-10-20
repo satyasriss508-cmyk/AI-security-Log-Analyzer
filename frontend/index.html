@@ -20,56 +20,32 @@
   }
 }
 * { box-sizing:border-box; }
-body {
-  margin:0; background:var(--bg); color:var(--ink);
-  font:15px/1.55 "Segoe UI",system-ui,sans-serif;
-}
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 "Segoe UI",system-ui,sans-serif; }
 main { max-width:1000px; margin:0 auto; padding:28px 18px 60px; }
 h1 { font-size:1.7rem; margin:0 0 4px; }
 p.sub { color:var(--mute); margin:0 0 22px; }
-.panel {
-  background:var(--panel); border:1px solid var(--line);
-  border-radius:8px; padding:18px; margin-bottom:18px;
-}
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; margin-bottom:18px; }
 textarea {
   width:100%; min-height:150px; background:var(--bg); color:var(--ink);
   border:1px solid var(--line); border-radius:6px; padding:10px;
   font:12.5px/1.45 ui-monospace,Consolas,monospace; resize:vertical;
 }
 .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
-button, label.btn {
-  background:var(--accent); color:var(--onaccent); border:0;
-  border-radius:6px; padding:9px 16px; font:inherit; cursor:pointer;
-}
-button.ghost, label.btn {
-  background:transparent; color:var(--ink); border:1px solid var(--line);
-}
+button, label.btn { background:var(--accent); color:var(--onaccent); border:0; border-radius:6px; padding:9px 16px; font:inherit; cursor:pointer; }
+button.ghost, label.btn { background:transparent; color:var(--ink); border:1px solid var(--line); }
 button:disabled { opacity:.5; cursor:wait; }
 #fname { color:var(--mute); font-size:.9rem; }
 .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
 .stat b { display:block; font-size:1.6rem; }
 .stat span { color:var(--mute); font-size:.85rem; }
-.inc {
-  border-left:4px solid var(--line); padding:10px 14px; margin:12px 0;
-  background:var(--bg); border-radius:0 6px 6px 0;
-}
-.inc.Critical { border-color:var(--crit); }
-.inc.High { border-color:var(--high); }
-.inc.Medium { border-color:var(--med); }
-.inc.Low { border-color:var(--low); }
+.inc { border-left:4px solid var(--line); padding:10px 14px; margin:12px 0; background:var(--bg); border-radius:0 6px 6px 0; }
+.inc.Critical { border-color:var(--crit); } .inc.High { border-color:var(--high); }
+.inc.Medium { border-color:var(--med); } .inc.Low { border-color:var(--low); }
 .inc h3 { margin:0 0 4px; font-size:1rem; }
-.tag {
-  font-size:.78rem; font-weight:600; padding:1px 8px;
-  border-radius:10px; border:1px solid currentColor; margin-left:6px;
-}
-.Critical .tag { color:var(--crit); }
-.High .tag { color:var(--high); }
-.Medium .tag { color:var(--med); }
-.Low .tag { color:var(--low); }
-code {
-  display:block; font:12px/1.4 ui-monospace,Consolas,monospace;
-  color:var(--mute); overflow-x:auto; white-space:pre; margin-top:4px;
-}
+.tag { font-size:.78rem; font-weight:600; padding:1px 8px; border-radius:10px; border:1px solid currentColor; margin-left:6px; }
+.Critical .tag { color:var(--crit); } .High .tag { color:var(--high); }
+.Medium .tag { color:var(--med); } .Low .tag { color:var(--low); }
+code { display:block; font:12px/1.4 ui-monospace,Consolas,monospace; color:var(--mute); overflow-x:auto; white-space:pre; margin-top:4px; scrollbar-color:var(--line) transparent; }
 .fix { margin-top:6px; }
 table { width:100%; border-collapse:collapse; }
 th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
@@ -77,21 +53,38 @@ th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
 #summary { white-space:pre-wrap; }
 .err { color:var(--crit); overflow-wrap:anywhere; }
 .hidden { display:none; }
+.overview { display:grid; grid-template-columns:minmax(180px,240px) 1fr; gap:24px; align-items:center; }
+.score { text-align:center; }
+.score b { display:block; font-size:3.2rem; line-height:1.1; }
+.score span { font-weight:600; }
+.meter { height:10px; border-radius:5px; background:var(--bg); margin:10px 0 4px; overflow:hidden; }
+.meter i { display:block; height:100%; border-radius:5px; }
+.bar { display:flex; align-items:center; gap:10px; margin:7px 0; font-size:.9rem; }
+.bar .l { width:110px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.track { flex:1; height:12px; background:var(--bg); border-radius:4px; overflow:hidden; }
+.track i { display:block; height:100%; border-radius:4px; background:var(--accent); }
+.bar .n { width:34px; text-align:right; }
+h4 { margin:0 0 6px; font-size:.95rem; }
+@media(max-width:640px){ .overview { grid-template-columns:1fr; } }
+@media print {
+  .noprint { display:none !important; }
+  body, .panel { background:#fff; color:#000; }
+  .panel { border-color:#999; break-inside:avoid; }
+}
 </style>
 </head>
 
 <body>
 <main>
   <h1>AI Security Log Analyzer</h1>
-  <p class="sub">
+  <p class="sub noprint">
     Upload server or application logs to find login attacks, SQL injection
     and suspicious IPs, with recommended actions.
   </p>
 
-  <section class="panel">
+  <section class="panel noprint">
     <textarea id="logs" aria-label="Log text"
       placeholder="Paste log lines here, or choose a file below."></textarea>
-
     <div class="row">
       <label class="btn">Choose log file
         <input id="file" type="file" accept=".log,.txt,text/plain" hidden>
@@ -100,19 +93,29 @@ th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
       <button id="go">Analyze logs</button>
       <button class="ghost" id="sample">Analyze sample logs</button>
     </div>
-
     <p id="err" class="err" role="alert"></p>
   </section>
 
   <div id="out" class="hidden">
+    <div class="row noprint" style="margin:0 0 14px">
+      <button id="csv">Download incidents (CSV)</button>
+      <button class="ghost" id="print">Print / save as PDF</button>
+    </div>
+
+    <section class="panel">
+      <h2>Risk overview</h2>
+      <div class="overview">
+        <div class="score" id="score"></div>
+        <div id="charts"></div>
+      </div>
+    </section>
+
     <section class="panel">
       <h2>Summary <small id="src" style="color:var(--mute);font-weight:400"></small></h2>
       <div id="summary"></div>
     </section>
 
-    <section class="panel">
-      <div class="stats" id="stats"></div>
-    </section>
+    <section class="panel"><div class="stats" id="stats"></div></section>
 
     <section class="panel">
       <h2>Incidents</h2>
@@ -131,17 +134,13 @@ const API = "https://ai-security-log-backend.onrender.com";
 const $ = id => document.getElementById(id);
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
-  "&":"&amp;",
-  "<":"&lt;",
-  ">":"&gt;",
-  '"':"&quot;",
-  "'":"&#39;"
+  "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
 }[c]));
 
 let selectedFile = null;
+let lastData = null;
 
-// Encode logs as base64 so a firewall in front of the backend does not
-// block the request for containing attack strings (HTTP 403).
+// Base64 so a firewall in front of the backend does not block attack strings (HTTP 403).
 function toBase64(str) {
   const bytes = new TextEncoder().encode(str);
   let bin = "";
@@ -160,45 +159,25 @@ $("file").addEventListener("change", event => {
 async function getResults(response) {
   const text = await response.text();
   let data;
-
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(
-      `Server returned a non-JSON response (HTTP ${response.status}).`
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(data.error || `Request failed (HTTP ${response.status}).`);
-  }
-
-  if (
-    !data.stats ||
-    !Array.isArray(data.incidents) ||
-    !Array.isArray(data.top_ips) ||
-    !data.summary
-  ) {
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`Server returned a non-JSON response (HTTP ${response.status}).`); }
+  if (!response.ok) throw new Error(data.error || `Request failed (HTTP ${response.status}).`);
+  if (!data.stats || !Array.isArray(data.incidents) || !Array.isArray(data.top_ips) || !data.summary) {
     throw new Error("Backend response is missing expected analysis data.");
   }
-
   render(data);
 }
 
 $("sample").addEventListener("click", async () => {
   $("err").textContent = "";
   $("sample").disabled = true;
-
   try {
-    // The sample is read and analyzed on the server.
     const response = await fetch(`${API}/api/analyze-sample`);
     await getResults(response);
-
     selectedFile = null;
     $("file").value = "";
     $("fname").textContent = "";
-    $("logs").value =
-      "Built-in sample logs analyzed. Results are displayed below.";
+    $("logs").value = "Built-in sample logs analyzed. Results are displayed below.";
   } catch (error) {
     $("err").textContent = "Could not analyze sample logs: " + error.message;
   } finally {
@@ -208,28 +187,20 @@ $("sample").addEventListener("click", async () => {
 
 $("go").addEventListener("click", async () => {
   $("err").textContent = "";
-
   if (!selectedFile && !$("logs").value.trim()) {
     $("err").textContent = "Paste logs or choose a file first.";
     return;
   }
-
   $("go").disabled = true;
   $("go").textContent = "Analyzing...";
-
   try {
     const logText = selectedFile ? await selectedFile.text() : $("logs").value;
-
-    if (!logText.trim()) {
-      throw new Error("The selected file is empty.");
-    }
-
+    if (!logText.trim()) throw new Error("The selected file is empty.");
     const response = await fetch(`${API}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ logs_b64: toBase64(logText) })
     });
-
     await getResults(response);
   } catch (error) {
     $("err").textContent = "Could not analyze logs: " + error.message;
@@ -239,7 +210,40 @@ $("go").addEventListener("click", async () => {
   }
 });
 
+// Report: CSV is built in the browser, so nothing extra is sent to the server.
+$("csv").addEventListener("click", () => {
+  if (!lastData) return;
+  const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+  const rows = [["Severity", "Type", "Source IP", "Events", "Recommendation", "Evidence"]];
+  lastData.incidents.forEach(i =>
+    rows.push([i.severity, i.type, i.ip, i.count, i.recommendation, (i.evidence || []).join(" | ")]));
+  const csv = rows.map(r => r.map(q).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = "security-incidents.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+$("print").addEventListener("click", () => window.print());
+
+function riskLabel(score) {
+  if (score >= 75) return ["Critical", "var(--crit)"];
+  if (score >= 50) return ["High", "var(--high)"];
+  if (score >= 25) return ["Medium", "var(--med)"];
+  if (score > 0) return ["Low", "var(--low)"];
+  return ["None", "var(--accent)"];
+}
+
+function bar(label, value, max, color) {
+  const pct = max ? Math.round((value / max) * 100) : 0;
+  return `<div class="bar"><span class="l" title="${esc(label)}">${esc(label)}</span>
+    <span class="track"><i style="width:${pct}%;background:${color}"></i></span>
+    <span class="n">${esc(value)}</span></div>`;
+}
+
 function render(data) {
+  lastData = data;
   $("out").classList.remove("hidden");
 
   $("summary").textContent = data.summary.text || "No summary available.";
@@ -248,46 +252,46 @@ function render(data) {
   const stats = data.stats;
   const severity = stats.by_severity || {};
 
+  // Risk gauge and charts
+  const score = Number(stats.risk_score || 0);
+  const [label, color] = riskLabel(score);
+  $("score").innerHTML = `<b style="color:${color}">${score}</b><span style="color:${color}">${label} risk</span>
+    <div class="meter"><i style="width:${score}%;background:${color}"></i></div>
+    <small style="color:var(--mute)">Risk score, 0 to 100</small>`;
+
+  const sevColors = { Critical:"var(--crit)", High:"var(--high)", Medium:"var(--med)", Low:"var(--low)" };
+  const sevMax = Math.max(1, ...Object.values(severity));
+  const topIps = data.top_ips.slice(0, 5);
+  const ipMax = Math.max(1, ...topIps.map(t => t.requests));
+  $("charts").innerHTML =
+    "<h4>Incidents by severity</h4>" +
+    Object.keys(sevColors).map(s => bar(s, severity[s] || 0, sevMax, sevColors[s])).join("") +
+    '<h4 style="margin-top:14px">Requests per IP (top 5)</h4>' +
+    topIps.map(t => bar(t.ip, t.requests, ipMax, "var(--accent)")).join("");
+
   const cards = [
     ["Log lines", stats.total_lines],
     ["Unique IPs", stats.unique_ips],
     ["Incidents", stats.incidents],
     ["Critical / High", `${severity.Critical || 0} / ${severity.High || 0}`]
   ];
-
-  $("stats").innerHTML = cards.map(([label, value]) =>
-    `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`
-  ).join("");
+  $("stats").innerHTML = cards.map(([l, v]) =>
+    `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
 
   $("incs").innerHTML = data.incidents.length
     ? data.incidents.map(incident => `
       <div class="inc ${esc(incident.severity)}">
-        <h3>${esc(incident.type)}
-          <span class="tag">${esc(incident.severity)}</span>
-        </h3>
-        <div>
-          Source IP <strong>${esc(incident.ip)}</strong>
-          &middot; ${esc(incident.count)} event(s)
-        </div>
-        ${(incident.evidence || []).map(evidence =>
-          `<code>${esc(evidence)}</code>`
-        ).join("")}
-        <div class="fix">
-          <strong>Action:</strong> ${esc(incident.recommendation)}
-        </div>
-      </div>
-    `).join("")
+        <h3>${esc(incident.type)}<span class="tag">${esc(incident.severity)}</span></h3>
+        <div>Source IP <strong>${esc(incident.ip)}</strong> &middot; ${esc(incident.count)} event(s)</div>
+        ${(incident.evidence || []).map(e => `<code>${esc(e)}</code>`).join("")}
+        <div class="fix"><strong>Action:</strong> ${esc(incident.recommendation)}</div>
+      </div>`).join("")
     : "<p>No suspicious activity found.</p>";
 
   $("ips").innerHTML =
     "<tr><th>IP address</th><th>Requests</th><th>Failed logins</th></tr>" +
     data.top_ips.map(ip => `
-      <tr>
-        <td>${esc(ip.ip)}</td>
-        <td>${esc(ip.requests)}</td>
-        <td>${esc(ip.failed_logins)}</td>
-      </tr>
-    `).join("");
+      <tr><td>${esc(ip.ip)}</td><td>${esc(ip.requests)}</td><td>${esc(ip.failed_logins)}</td></tr>`).join("");
 
   $("out").scrollIntoView({ behavior:"smooth" });
 }
