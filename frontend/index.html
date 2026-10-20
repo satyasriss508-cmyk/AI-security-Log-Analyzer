@@ -23,6 +23,8 @@
 body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 "Segoe UI",system-ui,sans-serif; }
 main { max-width:1000px; margin:0 auto; padding:28px 18px 60px; }
 h1 { font-size:1.7rem; margin:0 0 4px; }
+h2 { margin:0 0 12px; }
+h4 { margin:14px 0 6px; font-size:.95rem; }
 p.sub { color:var(--mute); margin:0 0 22px; }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px; margin-bottom:18px; }
 textarea {
@@ -30,29 +32,31 @@ textarea {
   border:1px solid var(--line); border-radius:6px; padding:10px;
   font:12.5px/1.45 ui-monospace,Consolas,monospace; resize:vertical;
 }
+input[type=search] {
+  background:var(--bg); color:var(--ink); border:1px solid var(--line);
+  border-radius:6px; padding:8px 10px; font:inherit; min-width:210px;
+}
 .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
 button, label.btn { background:var(--accent); color:var(--onaccent); border:0; border-radius:6px; padding:9px 16px; font:inherit; cursor:pointer; }
 button.ghost, label.btn { background:transparent; color:var(--ink); border:1px solid var(--line); }
 button:disabled { opacity:.5; cursor:wait; }
+button:focus-visible, label.btn:focus-within, textarea:focus-visible, input:focus-visible, summary:focus-visible {
+  outline:2px solid var(--accent); outline-offset:2px;
+}
 #fname { color:var(--mute); font-size:.9rem; }
-.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
-.stat b { display:block; font-size:1.6rem; }
-.stat span { color:var(--mute); font-size:.85rem; }
-.inc { border-left:4px solid var(--line); padding:10px 14px; margin:12px 0; background:var(--bg); border-radius:0 6px 6px 0; }
-.inc.Critical { border-color:var(--crit); } .inc.High { border-color:var(--high); }
-.inc.Medium { border-color:var(--med); } .inc.Low { border-color:var(--low); }
-.inc h3 { margin:0 0 4px; font-size:1rem; }
-.tag { font-size:.78rem; font-weight:600; padding:1px 8px; border-radius:10px; border:1px solid currentColor; margin-left:6px; }
-.Critical .tag { color:var(--crit); } .High .tag { color:var(--high); }
-.Medium .tag { color:var(--med); } .Low .tag { color:var(--low); }
-code { display:block; font:12px/1.4 ui-monospace,Consolas,monospace; color:var(--mute); overflow-x:auto; white-space:pre; margin-top:4px; scrollbar-color:var(--line) transparent; }
-.fix { margin-top:6px; }
-table { width:100%; border-collapse:collapse; }
-th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
-.tw { overflow-x:auto; }
-#summary { white-space:pre-wrap; }
 .err { color:var(--crit); overflow-wrap:anywhere; }
 .hidden { display:none; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 18px; overflow-x:auto; }
+.tab {
+  background:transparent; color:var(--mute); border:0; border-bottom:3px solid transparent;
+  border-radius:0; padding:10px 16px; font:inherit; cursor:pointer; white-space:nowrap;
+}
+.tab[aria-selected="true"] { color:var(--ink); border-bottom-color:var(--accent); font-weight:600; }
+.tabpanel[hidden] { display:none; }
+
+/* Overview */
 .overview { display:grid; grid-template-columns:minmax(180px,240px) 1fr; gap:24px; align-items:center; }
 .score { text-align:center; }
 .score b { display:block; font-size:3.2rem; line-height:1.1; }
@@ -64,10 +68,61 @@ th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
 .track { flex:1; height:12px; background:var(--bg); border-radius:4px; overflow:hidden; }
 .track i { display:block; height:100%; border-radius:4px; background:var(--accent); }
 .bar .n { width:34px; text-align:right; }
-h4 { margin:0 0 6px; font-size:.95rem; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
+.stat b { display:block; font-size:1.6rem; }
+.stat span { color:var(--mute); font-size:.85rem; }
+
+/* Summary */
+.badge {
+  display:inline-block; font-weight:700; padding:3px 12px; border-radius:14px;
+  border:1px solid var(--c); color:var(--c); margin-bottom:8px;
+}
+#summary p { margin:6px 0; }
+#summary ul, #summary ol { margin:4px 0 8px; padding-left:22px; }
+#summary li { margin:3px 0; }
+#summary .plain { white-space:pre-wrap; }
+
+/* Incidents */
+.filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+.chip {
+  background:transparent; color:var(--ink); border:1px solid var(--line);
+  border-radius:16px; padding:4px 12px; font-size:.88rem;
+}
+.chip[aria-pressed="true"] { background:var(--accent); color:var(--onaccent); border-color:var(--accent); }
+#count { color:var(--mute); font-size:.88rem; margin:0 0 6px; }
+details.inc { border-left:4px solid var(--line); margin:10px 0; background:var(--bg); border-radius:0 6px 6px 0; }
+details.inc.Critical { border-color:var(--crit); } details.inc.High { border-color:var(--high); }
+details.inc.Medium { border-color:var(--med); } details.inc.Low { border-color:var(--low); }
+details.inc summary {
+  list-style:none; cursor:pointer; padding:10px 14px; display:flex; gap:10px;
+  flex-wrap:wrap; align-items:center;
+}
+details.inc summary::-webkit-details-marker { display:none; }
+details.inc summary::before {
+  content:""; border:5px solid transparent; border-left:7px solid var(--mute);
+  border-right:0; transition:transform .15s;
+}
+details.inc[open] summary::before { transform:rotate(90deg); }
+.itype { font-weight:600; }
+.iip { color:var(--mute); }
+.tag { font-size:.78rem; font-weight:600; padding:1px 8px; border-radius:10px; border:1px solid currentColor; }
+.Critical .tag { color:var(--crit); } .High .tag { color:var(--high); }
+.Medium .tag { color:var(--med); } .Low .tag { color:var(--low); }
+.ibody { padding:0 14px 12px 33px; }
+code {
+  display:block; font:12px/1.4 ui-monospace,Consolas,monospace; color:var(--mute);
+  overflow-x:auto; white-space:pre; margin-top:4px; scrollbar-color:var(--line) transparent;
+}
+.fix { margin-top:8px; }
+
+table { width:100%; border-collapse:collapse; }
+th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+.tw { overflow-x:auto; }
+
 @media(max-width:640px){ .overview { grid-template-columns:1fr; } }
 @media print {
   .noprint { display:none !important; }
+  .tabpanel[hidden] { display:block !important; }
   body, .panel { background:#fff; color:#000; }
   .panel { border-color:#999; break-inside:avoid; }
 }
@@ -102,30 +157,45 @@ h4 { margin:0 0 6px; font-size:.95rem; }
       <button class="ghost" id="print">Print / save as PDF</button>
     </div>
 
-    <section class="panel">
-      <h2>Risk overview</h2>
-      <div class="overview">
-        <div class="score" id="score"></div>
-        <div id="charts"></div>
-      </div>
-    </section>
+    <div class="tabs noprint" role="tablist" aria-label="Results">
+      <button class="tab" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="tab" role="tab" data-tab="incidents" aria-selected="false" tabindex="-1">Incidents <span id="tcount"></span></button>
+      <button class="tab" role="tab" data-tab="ips" aria-selected="false" tabindex="-1">IP addresses</button>
+    </div>
 
-    <section class="panel">
-      <h2>Summary <small id="src" style="color:var(--mute);font-weight:400"></small></h2>
-      <div id="summary"></div>
-    </section>
+    <div class="tabpanel" id="tab-overview" role="tabpanel">
+      <section class="panel">
+        <h2>Risk overview</h2>
+        <div class="overview">
+          <div class="score" id="score"></div>
+          <div id="charts"></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Summary <small id="src" style="color:var(--mute);font-weight:400"></small></h2>
+        <div id="summary"></div>
+      </section>
+      <section class="panel"><div class="stats" id="stats"></div></section>
+    </div>
 
-    <section class="panel"><div class="stats" id="stats"></div></section>
+    <div class="tabpanel" id="tab-incidents" role="tabpanel" hidden>
+      <section class="panel">
+        <h2>Incidents</h2>
+        <div class="filters noprint">
+          <span id="chips"></span>
+          <input id="q" type="search" placeholder="Search by IP or type" aria-label="Search incidents">
+        </div>
+        <p id="count"></p>
+        <div id="incs"></div>
+      </section>
+    </div>
 
-    <section class="panel">
-      <h2>Incidents</h2>
-      <div id="incs"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Most active IPs</h2>
-      <div class="tw"><table id="ips"></table></div>
-    </section>
+    <div class="tabpanel" id="tab-ips" role="tabpanel" hidden>
+      <section class="panel">
+        <h2>Most active IPs</h2>
+        <div class="tw"><table id="ips"></table></div>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -137,8 +207,13 @@ const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
   "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
 }[c]));
 
+const SEVS = ["Critical", "High", "Medium", "Low"];
+const SEV_COLOR = { Critical:"var(--crit)", High:"var(--high)", Medium:"var(--med)", Low:"var(--low)" };
+
 let selectedFile = null;
 let lastData = null;
+let filterSev = "All";
+let filterQ = "";
 
 // Base64 so a firewall in front of the backend does not block attack strings (HTTP 403).
 function toBase64(str) {
@@ -210,7 +285,7 @@ $("go").addEventListener("click", async () => {
   }
 });
 
-// Report: CSV is built in the browser, so nothing extra is sent to the server.
+// ---- Report export (built in the browser) ----
 $("csv").addEventListener("click", () => {
   if (!lastData) return;
   const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
@@ -226,7 +301,35 @@ $("csv").addEventListener("click", () => {
 });
 
 $("print").addEventListener("click", () => window.print());
+// Expand every incident card while printing so the report includes all evidence.
+window.addEventListener("beforeprint", () =>
+  document.querySelectorAll("details.inc").forEach(d => { d.dataset.was = d.open; d.open = true; }));
+window.addEventListener("afterprint", () =>
+  document.querySelectorAll("details.inc").forEach(d => { d.open = d.dataset.was === "true"; }));
 
+// ---- Tabs ----
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(b => {
+    const on = b.dataset.tab === name;
+    b.setAttribute("aria-selected", on);
+    b.tabIndex = on ? 0 : -1;
+  });
+  document.querySelectorAll(".tabpanel").forEach(p => { p.hidden = p.id !== "tab-" + name; });
+}
+document.querySelector(".tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab");
+  if (b) showTab(b.dataset.tab);
+});
+document.querySelector(".tabs").addEventListener("keydown", e => {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const tabs = [...document.querySelectorAll(".tab")];
+  const i = tabs.findIndex(t => t.getAttribute("aria-selected") === "true");
+  const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+  showTab(next.dataset.tab);
+  next.focus();
+});
+
+// ---- Helpers ----
 function riskLabel(score) {
   if (score >= 75) return ["Critical", "var(--crit)"];
   if (score >= 50) return ["High", "var(--high)"];
@@ -242,30 +345,107 @@ function bar(label, value, max, color) {
     <span class="n">${esc(value)}</span></div>`;
 }
 
+// Turns the backend's rule-based summary text into a badge, lists and headings.
+// Free-form text (for example an AI summary) is shown as is.
+function renderSummary(text) {
+  if (!/^OVERALL RISK LEVEL:/im.test(text)) {
+    return `<div class="plain">${esc(text || "No summary available.")}</div>`;
+  }
+  let html = "", open = "";
+  const close = () => { if (open) { html += `</${open}>`; open = ""; } };
+  const start = tag => { if (open !== tag) { close(); html += `<${tag}>`; open = tag; } };
+
+  for (const raw of text.split("\n")) {
+    const t = raw.trim();
+    if (!t) { close(); continue; }
+    const risk = t.match(/^OVERALL RISK LEVEL:\s*(.+)$/i);
+    if (risk) {
+      close();
+      const color = SEV_COLOR[risk[1].trim()] || "var(--accent)";
+      html += `<span class="badge" style="--c:${color}">${esc(risk[1].trim())} risk</span>`;
+    } else if (/:$/.test(t)) {
+      close(); html += `<h4>${esc(t.slice(0, -1))}</h4>`;
+    } else if (/^- /.test(t)) {
+      start("ul"); html += `<li>${esc(t.slice(2))}</li>`;
+    } else if (/^\d+\.\s/.test(t)) {
+      start("ol"); html += `<li>${esc(t.replace(/^\d+\.\s/, ""))}</li>`;
+    } else {
+      close(); html += `<p>${esc(t)}</p>`;
+    }
+  }
+  close();
+  return html;
+}
+
+// ---- Incidents list with filters ----
+function renderChips() {
+  const counts = {};
+  lastData.incidents.forEach(i => { counts[i.severity] = (counts[i.severity] || 0) + 1; });
+  const items = [["All", lastData.incidents.length], ...SEVS.map(s => [s, counts[s] || 0])];
+  $("chips").innerHTML = items.map(([s, n]) =>
+    `<button class="chip" data-sev="${s}" aria-pressed="${filterSev === s}">${s} (${n})</button>`
+  ).join(" ");
+}
+
+function renderIncidents() {
+  const q = filterQ.trim().toLowerCase();
+  const all = lastData.incidents;
+  const list = all.filter(i =>
+    (filterSev === "All" || i.severity === filterSev) &&
+    (!q || i.ip.toLowerCase().includes(q) || i.type.toLowerCase().includes(q)));
+
+  $("count").textContent = `Showing ${list.length} of ${all.length} incident(s). Select one to see the evidence and recommended action.`;
+  $("incs").innerHTML = list.length ? list.map(i => `
+    <details class="inc ${esc(i.severity)}">
+      <summary>
+        <span class="tag">${esc(i.severity)}</span>
+        <span class="itype">${esc(i.type)}</span>
+        <span class="iip">${esc(i.ip)} &middot; ${esc(i.count)} event(s)</span>
+      </summary>
+      <div class="ibody">
+        ${(i.evidence || []).map(e => `<code>${esc(e)}</code>`).join("")}
+        <div class="fix"><strong>Action:</strong> ${esc(i.recommendation)}</div>
+      </div>
+    </details>`).join("")
+    : (all.length ? "<p>No incidents match this filter.</p>" : "<p>No suspicious activity found.</p>");
+}
+
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip");
+  if (!b) return;
+  filterSev = b.dataset.sev;
+  renderChips();
+  renderIncidents();
+});
+$("q").addEventListener("input", e => { filterQ = e.target.value; renderIncidents(); });
+
+// ---- Main render ----
 function render(data) {
   lastData = data;
+  filterSev = "All";
+  filterQ = "";
+  $("q").value = "";
   $("out").classList.remove("hidden");
+  showTab("overview");
 
-  $("summary").textContent = data.summary.text || "No summary available.";
+  $("summary").innerHTML = renderSummary(data.summary.text);
   $("src").textContent = "(" + (data.summary.source || "unknown") + ")";
 
   const stats = data.stats;
   const severity = stats.by_severity || {};
 
-  // Risk gauge and charts
   const score = Number(stats.risk_score || 0);
   const [label, color] = riskLabel(score);
   $("score").innerHTML = `<b style="color:${color}">${score}</b><span style="color:${color}">${label} risk</span>
     <div class="meter"><i style="width:${score}%;background:${color}"></i></div>
     <small style="color:var(--mute)">Risk score, 0 to 100</small>`;
 
-  const sevColors = { Critical:"var(--crit)", High:"var(--high)", Medium:"var(--med)", Low:"var(--low)" };
   const sevMax = Math.max(1, ...Object.values(severity));
   const topIps = data.top_ips.slice(0, 5);
   const ipMax = Math.max(1, ...topIps.map(t => t.requests));
   $("charts").innerHTML =
     "<h4>Incidents by severity</h4>" +
-    Object.keys(sevColors).map(s => bar(s, severity[s] || 0, sevMax, sevColors[s])).join("") +
+    SEVS.map(s => bar(s, severity[s] || 0, sevMax, SEV_COLOR[s])).join("") +
     '<h4 style="margin-top:14px">Requests per IP (top 5)</h4>' +
     topIps.map(t => bar(t.ip, t.requests, ipMax, "var(--accent)")).join("");
 
@@ -278,15 +458,9 @@ function render(data) {
   $("stats").innerHTML = cards.map(([l, v]) =>
     `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
 
-  $("incs").innerHTML = data.incidents.length
-    ? data.incidents.map(incident => `
-      <div class="inc ${esc(incident.severity)}">
-        <h3>${esc(incident.type)}<span class="tag">${esc(incident.severity)}</span></h3>
-        <div>Source IP <strong>${esc(incident.ip)}</strong> &middot; ${esc(incident.count)} event(s)</div>
-        ${(incident.evidence || []).map(e => `<code>${esc(e)}</code>`).join("")}
-        <div class="fix"><strong>Action:</strong> ${esc(incident.recommendation)}</div>
-      </div>`).join("")
-    : "<p>No suspicious activity found.</p>";
+  $("tcount").textContent = `(${data.incidents.length})`;
+  renderChips();
+  renderIncidents();
 
   $("ips").innerHTML =
     "<tr><th>IP address</th><th>Requests</th><th>Failed logins</th></tr>" +
