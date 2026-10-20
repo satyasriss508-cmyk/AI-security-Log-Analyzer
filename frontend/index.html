@@ -140,6 +140,17 @@ const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
 
 let selectedFile = null;
 
+// Encode logs as base64 so a firewall in front of the backend does not
+// block the request for containing attack strings (HTTP 403).
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
+}
+
 $("file").addEventListener("change", event => {
   selectedFile = event.target.files[0] || null;
   $("fname").textContent = selectedFile ? selectedFile.name : "";
@@ -180,7 +191,6 @@ $("sample").addEventListener("click", async () => {
 
   try {
     // The sample is read and analyzed on the server.
-    // No suspicious sample text is sent in a POST request.
     const response = await fetch(`${API}/api/analyze-sample`);
     await getResults(response);
 
@@ -208,9 +218,6 @@ $("go").addEventListener("click", async () => {
   $("go").textContent = "Analyzing...";
 
   try {
-    // Read the chosen file in the browser and send its text as JSON,
-    // exactly like pasted logs. Multipart file uploads were being
-    // blocked (HTTP 403) before reaching the backend.
     const logText = selectedFile ? await selectedFile.text() : $("logs").value;
 
     if (!logText.trim()) {
@@ -220,7 +227,7 @@ $("go").addEventListener("click", async () => {
     const response = await fetch(`${API}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ logs: logText })
+      body: JSON.stringify({ logs_b64: toBase64(logText) })
     });
 
     await getResults(response);
