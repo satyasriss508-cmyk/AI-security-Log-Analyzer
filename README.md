@@ -39,5 +39,7 @@ The frontend base64-encodes log text before sending it. Logs full of attack stri
 ## Tuning
 Thresholds (`BRUTE_THRESHOLD`, `RATE_THRESHOLD`, `NOT_FOUND_THRESHOLD`) and regex rules are at the top of `backend/analyzer.py`.
 ## Screenshots
-<img width="1306" height="886" alt="image" src="https://github.com/user-attachments/assets/b2ba4305-aca2-491e-a1f0-b82550250653" />
+Risk score, severity breakdown and summary
 <img width="1000" height="1324" alt="image" src="https://github.com/user-attachments/assets/c7e7f436-1860-488c-bcad-f837a8650d1c" />
+Filterable incidents with evidence and recommended action
+<img width="1306" height="886" alt="image" src="https://github.com/user-attachments/assets/b2ba4305-aca2-491e-a1f0-b82550250653" />
