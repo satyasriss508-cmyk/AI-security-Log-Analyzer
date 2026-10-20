@@ -23,8 +23,13 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB
 CORS(app)
 
 
+RISK_WEIGHT = {"Critical": 40, "High": 20, "Medium": 8, "Low": 3}
+
+
 def run_analysis(text: str):
     result = analyze(text)
+    result["stats"]["risk_score"] = min(
+        100, sum(RISK_WEIGHT.get(i["severity"], 0) for i in result["incidents"]))
     result["summary"] = summarize(result)
     return jsonify(result)
 
