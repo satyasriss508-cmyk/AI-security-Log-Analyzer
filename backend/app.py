@@ -1,4 +1,5 @@
 import base64
+import math
 import os
 from pathlib import Path
 
@@ -26,10 +27,17 @@ CORS(app)
 RISK_WEIGHT = {"Critical": 40, "High": 20, "Medium": 8, "Low": 3}
 
 
+def risk_score(incidents):
+    raw = sum(RISK_WEIGHT.get(i["severity"], 0) for i in incidents)
+    score = round(100 * (1 - math.exp(-raw / 60)))  # rises quickly, then levels off
+    if any(i["severity"] == "Critical" for i in incidents):
+        score = max(score, 75)  # a possible account compromise is always Critical
+    return min(100, score)
+
+
 def run_analysis(text: str):
     result = analyze(text)
-    result["stats"]["risk_score"] = min(
-        100, sum(RISK_WEIGHT.get(i["severity"], 0) for i in result["incidents"]))
+    result["stats"]["risk_score"] = risk_score(result["incidents"])
     result["summary"] = summarize(result)
     return jsonify(result)
 
