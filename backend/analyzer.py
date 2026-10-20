@@ -99,14 +99,54 @@ def analyze(text: str) -> dict:
         "incidents": incidents,
         "top_ips": top_ips,
     }
+SEV_WEIGHT = {"Critical": 10, "High": 5, "Medium": 2, "Low": 1}
+TS_RE = re.compile(r"\[([^\]]+)\]|^([A-Z][a-z]{2}\s+\d+\s[\d:]{8})")
 
 
 def rule_based_summary(result: dict) -> str:
     inc, st = result["incidents"], result["stats"]
+    head = f"Analyzed {st['total_lines']} log lines from {st['unique_ips']} unique IPs."
     if not inc:
-        return f"Analyzed {st['total_lines']} log lines from {st['unique_ips']} IPs. No suspicious activity detected."
+        return head + " No suspicious activity detected.\nOverall risk level: None."
+
+    # Overall risk = worst severity found
+    levels = {i["severity"] for i in inc}
+    risk = next(l for l in ("Critical", "High", "Medium", "Low") if l in levels)
+
+    # Most dangerous IPs, scored by severity of the incidents they caused
+    score, kinds = defaultdict(int), defaultdict(list)
+    for i in inc:
+        score[i["ip"]] += SEV_WEIGHT[i["severity"]]
+        if i["type"] not in kinds[i["ip"]]:
+            kinds[i["ip"]].append(i["type"])
+    top = sorted(score, key=score.get, reverse=True)[:3]
+
+    # Evidence timestamps (first logged event of each incident, when one is found)
+    events = []
+    for i in inc:
+        for line in i["evidence"][:1]:
+            m = TS_RE.search(line)
+            if m:
+                events.append(f"- {m.group(1) or m.group(2)}: {i['type']} from {i['ip']}")
+    events = events[:5]
+
+    # Prioritized actions: most severe first, no duplicates
+    actions = []
+    for i in inc:
+        if i["recommendation"] not in actions:
+            actions.append(i["recommendation"])
+    actions = actions[:5]
+
     types = Counter(i["type"] for i in inc)
-    worst = inc[0]
-    return (f"Analyzed {st['total_lines']} log lines from {st['unique_ips']} IPs and found {len(inc)} incident(s). "
-            "Breakdown: " + ", ".join(f"{n}x {t}" for t, n in types.items()) + ". "
-            f"Highest priority: {worst['severity']} - {worst['type']} from {worst['ip']}. {worst['recommendation']}")
+    lines = [
+        f"OVERALL RISK LEVEL: {risk}",
+        f"{head} Found {len(inc)} incident(s): " + ", ".join(f"{n}x {t}" for t, n in types.items()) + ".",
+        "",
+        "Most dangerous IPs:",
+        *[f"- {ip}: {', '.join(kinds[ip])}" for ip in top],
+    ]
+    if events:
+        lines += ["", "Key events (from log timestamps):", *events]
+    lines += ["", "Recommended actions, in priority order:",
+              *[f"{n}. {a}" for n, a in enumerate(actions, 1)]]
+    return "\n".join(lines)
