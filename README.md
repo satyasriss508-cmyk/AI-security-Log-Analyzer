@@ -6,9 +6,28 @@
 
 Upload or paste application/server security logs. The tool detects suspicious activity, summarizes incidents and recommends actions.
 
-**Detects:** repeated login failures (brute force), successful login after many failures (possible compromise), SQL injection, XSS, path traversal, scanner tools (sqlmap, nikto...), unusual request volume per IP, and endpoint probing (many 404s).
+## Screenshots
 
-**AI summary:** if `ANTHROPIC_API_KEY` is set, Claude writes the incident summary. Without a key, a rule-based summary is used, so the app works either way.
+![Overview](overview.png)
+
+Risk score, severity breakdown and summary
+
+![Incidents](incidents.png)
+
+Filterable incidents with evidence and recommended action
+
+## What it detects
+
+**Rule-based detection:** repeated login failures (brute force), successful login after many failures (possible account compromise), SQL injection, XSS, path traversal, scanner tools (sqlmap, nikto...), unusual request volume per IP, and endpoint probing (many 404s). Every incident includes the evidence lines, a severity and a recommended action.
+
+**Machine learning:** an Isolation Forest model (scikit-learn) analyzes per-IP behavior (requests, failed logins, error responses, attack-pattern hits) and flags IPs that are unusual compared with the rest, including low-and-slow activity that stays below the rule thresholds. Findings are labeled "Anomalous behavior (ML)" with an anomaly score, and say whether the rules also caught that IP. The model needs at least 10 distinct IPs, so smaller logs skip it.
+
+**AI summary (optional):** if `ANTHROPIC_API_KEY` is set, Claude writes the incident summary. Without a key, a rule-based summary is used, so the app works either way.
+
+**Risk score:** a 0 to 100 score based on the severity of the incidents found.
+
+## Tech stack
+Python, Flask, scikit-learn, vanilla JavaScript, deployed on Render.
 
 ## Structure
 ```
@@ -31,13 +50,10 @@ Open http://localhost:5000, click **Analyze sample logs**, or paste/upload your 
 ## API
 - `GET /api/health`
 - `GET /api/analyze-sample` - analyzes the built-in sample log.
-- `POST /api/analyze` - JSON body with `logs_b64` (base64-encoded log text) or `logs` (plain text), or a multipart `file`. Returns stats, incidents, top IPs and summary.
+- `POST /api/analyze` - JSON body with `logs_b64` (base64-encoded log text) or `logs` (plain text), or a multipart `file`. Returns stats, incidents, top IPs, ML status and summary.
 
 ## Deployment note
 The frontend base64-encodes log text before sending it. Logs full of attack strings (SQL injection, XSS) can be blocked by firewalls in front of the server with an HTTP 403, and encoding avoids that.
 
 ## Tuning
-Thresholds (`BRUTE_THRESHOLD`, `RATE_THRESHOLD`, `NOT_FOUND_THRESHOLD`) and regex rules are at the top of `backend/analyzer.py`.
-
-## Machine learning: 
-an Isolation Forest model analyzes per-IP behavior (requests, failed logins, error responses, attack-pattern hits) and flags IPs that are unusual compared with the rest, including low-and-slow activity that stays below the rule thresholds. It needs at least 10 distinct IPs, so smaller logs skip it.
+Thresholds (`BRUTE_THRESHOLD`, `RATE_THRESHOLD`, `NOT_FOUND_THRESHOLD`, `MIN_IPS_FOR_ML`, `ML_MIN_SCORE`) and regex rules are at the top of
