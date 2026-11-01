@@ -19,6 +19,8 @@ SCANNER_RE = re.compile(r"sqlmap|nikto|nmap|masscan|dirbuster|gobuster|wpscan|ac
 BRUTE_THRESHOLD = 5
 RATE_THRESHOLD = 100
 NOT_FOUND_THRESHOLD = 15
+ML_MIN_SCORE = 0.70  # only report clearly unusual IPs (0.5 is the model's own, much looser, cutoff)
+MIN_IPS_FOR_ML = 10  # Isolation Forest needs enough IPs to learn what normal looks like
 
 RECOMMENDATIONS = {
     "Brute-force login attempt": "Block or rate-limit the IP, enforce account lockout and MFA, and reset passwords of targeted accounts.",
@@ -28,14 +30,51 @@ RECOMMENDATIONS = {
     "Path traversal attempt": "Normalize and validate file paths, run the app with least privilege, and block the source IP.",
     "Scanner / attack tool detected": "Block the IP and user-agent; confirm no sensitive endpoints were exposed.",
     "Unusual request volume": "Apply rate limiting; check for DoS or scraping; consider a CDN/WAF challenge.",
+    "Anomalous behavior (ML)": "Review this IP's requests in full. It behaves very differently from the other clients; block or rate-limit it if it is not a known client.",
     "Endpoint probing (many 404s)": "Likely directory enumeration. Block or throttle the IP and remove unused endpoints.",
 }
 SEVERITY_ORDER = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+SEV_WEIGHT = {"Critical": 10, "High": 5, "Medium": 2, "Low": 1}
+def ml_anomalies(per_ip, hits):
+    """Isolation Forest over per-IP behavior. Returns (top findings, status for the UI)."""
+    ips = [ip for ip in per_ip if ip != "unknown"]
+    status = {"method": "Isolation Forest", "ips_analyzed": len(ips), "flagged": 0, "state": "ran"}
+    if len(ips) < MIN_IPS_FOR_ML:
+        status["state"] = f"skipped: needs at least {MIN_IPS_FOR_ML} IPs"
+        return [], status
+    try:
+        import numpy as np
+        from sklearn.ensemble import IsolationForest
+    except ImportError:
+        status["state"] = "unavailable: scikit-learn is not installed"
+        return [], status
+
+    rows = []
+    for ip in ips:
+        d = per_ip[ip]
+        events = sum(len(by_ip[ip]) for by_ip in hits.values() if ip in by_ip)
+        kinds = sum(1 for by_ip in hits.values() if ip in by_ip)
+        rows.append([d["requests"], d["fails"], d["404"], d["errors"], events, kinds])
+
+    X = np.log1p(np.array(rows, dtype=float))
+    model = IsolationForest(n_estimators=200, contamination="auto", random_state=42).fit(X)
+    scores = -model.score_samples(X)  # higher = more unusual
+
+    found = []
+    for ip, row, sc in zip(ips, rows, scores):
+        # Also require real bad behavior (2+ failed logins, 3+ error responses, or any attack pattern),
+        # so a busy client, or one with a single harmless 404, is never flagged.
+        if sc >= ML_MIN_SCORE and (row[1] >= 2 or row[3] >= 3 or row[4] >= 1):
+            found.append((float(sc), ip, row))
+    found.sort(reverse=True)
+    found = found[:5]
+    status["flagged"] = len(found)
+    return found, status
 
 
 def analyze(text: str) -> dict:
     lines = [l for l in text.splitlines() if l.strip()]
-    per_ip = defaultdict(lambda: {"requests": 0, "fails": 0, "ok": 0, "404": 0, "users": Counter()})
+    per_ip = defaultdict(lambda: {"requests": 0, "fails": 0, "ok": 0, "404": 0, "errors": 0, "users": Counter()})
     hits = defaultdict(lambda: defaultdict(list))  # attack type -> ip -> evidence lines
     status_counts = Counter()
 
@@ -51,6 +90,8 @@ def analyze(text: str) -> dict:
             status_counts[s.group(1)] += 1
             if s.group(1) == "404":
                 d["404"] += 1
+            if int(s.group(1)) >= 400:
+                d["errors"] += 1
 
         if FAIL_RE.search(line):
             d["fails"] += 1
@@ -89,6 +130,15 @@ def analyze(text: str) -> dict:
         for ip, ev in by_ip.items():
             add(kind, sev[kind], ip, len(ev), ev)
 
+    # Machine learning: find IPs whose behavior is unusual compared with the rest
+    rule_ips = {i["ip"] for i in incidents}
+    ml_found, ml_status = ml_anomalies(per_ip, hits)
+    for sc, ip, (reqs, fails, nf, errors, events, kinds) in ml_found:
+        note = "Also flagged by detection rules." if ip in rule_ips else "Not caught by any rule: review manually."
+        add("Anomalous behavior (ML)", "Medium", ip, reqs, [
+            f"Anomaly score {round(sc * 100)}/100. Requests {reqs}, failed logins {fails}, "
+            f"error responses {errors}, attack-pattern events {events}.", note])
+
     incidents.sort(key=lambda i: (SEVERITY_ORDER[i["severity"]], -i["count"]))
     top_ips = [{"ip": ip, "requests": d["requests"], "failed_logins": d["fails"]}
                for ip, d in sorted(per_ip.items(), key=lambda x: -x[1]["requests"])[:10]]
@@ -98,9 +148,8 @@ def analyze(text: str) -> dict:
                   "by_severity": dict(Counter(i["severity"] for i in incidents)), "status_codes": dict(status_counts)},
         "incidents": incidents,
         "top_ips": top_ips,
+        "ml": ml_status,
     }
-SEV_WEIGHT = {"Critical": 10, "High": 5, "Medium": 2, "Low": 1}
-TS_RE = re.compile(r"\[([^\]]+)\]|^([A-Z][a-z]{2}\s+\d+\s[\d:]{8})")
 
 
 def rule_based_summary(result: dict) -> str:
@@ -109,11 +158,9 @@ def rule_based_summary(result: dict) -> str:
     if not inc:
         return head + " No suspicious activity detected.\nOverall risk level: None."
 
-    # Overall risk = worst severity found
     levels = {i["severity"] for i in inc}
     risk = next(l for l in ("Critical", "High", "Medium", "Low") if l in levels)
 
-    # Most dangerous IPs, scored by severity of the incidents they caused
     score, kinds = defaultdict(int), defaultdict(list)
     for i in inc:
         score[i["ip"]] += SEV_WEIGHT[i["severity"]]
@@ -121,16 +168,6 @@ def rule_based_summary(result: dict) -> str:
             kinds[i["ip"]].append(i["type"])
     top = sorted(score, key=score.get, reverse=True)[:3]
 
-    # Evidence timestamps (first logged event of each incident, when one is found)
-    events = []
-    for i in inc:
-        for line in i["evidence"][:1]:
-            m = TS_RE.search(line)
-            if m:
-                events.append(f"- {m.group(1) or m.group(2)}: {i['type']} from {i['ip']}")
-    events = events[:5]
-
-    # Prioritized actions: most severe first, no duplicates
     actions = []
     for i in inc:
         if i["recommendation"] not in actions:
@@ -144,9 +181,8 @@ def rule_based_summary(result: dict) -> str:
         "",
         "Most dangerous IPs:",
         *[f"- {ip}: {', '.join(kinds[ip])}" for ip in top],
+        "",
+        "Recommended actions, in priority order:",
+        *[f"{n}. {a}" for n, a in enumerate(actions, 1)],
     ]
-    if events:
-        lines += ["", "Key events (from log timestamps):", *events]
-    lines += ["", "Recommended actions, in priority order:",
-              *[f"{n}. {a}" for n, a in enumerate(actions, 1)]]
     return "\n".join(lines)
