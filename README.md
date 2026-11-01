@@ -6,15 +6,6 @@
 
 Upload or paste application/server security logs. The tool detects suspicious activity, summarizes incidents and recommends actions.
 
-## Screenshots
-
-![Overview](overview.png)
-
-Risk score, severity breakdown and summary
-
-![Incidents](incidents.png)
-
-Filterable incidents with evidence and recommended action
 
 ## What it detects
 
