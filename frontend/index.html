@@ -175,6 +175,7 @@ th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
           <div class="score" id="score"></div>
           <div id="charts"></div>
         </div>
+        <p class="hint" id="mlnote"></p>
       </section>
       <section class="panel">
         <h2>Summary <small id="src" style="color:var(--mute);font-weight:400"></small></h2>
@@ -501,6 +502,11 @@ function render(data) {
   ];
   $("stats").innerHTML = cards.map(([l, v]) =>
     `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+
+  const ml = data.ml;
+  $("mlnote").textContent = !ml ? "" : ml.state === "ran"
+    ? `Machine learning (${ml.method}) analyzed ${ml.ips_analyzed} IPs and flagged ${ml.flagged} as unusual.`
+    : `Machine learning (${ml.method}) ${ml.state}.`;
 
   $("tcount").textContent = `(${data.incidents.length})`;
   renderChips();
