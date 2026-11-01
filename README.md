@@ -38,3 +38,5 @@ The frontend base64-encodes log text before sending it. Logs full of attack stri
 
 ## Tuning
 Thresholds (`BRUTE_THRESHOLD`, `RATE_THRESHOLD`, `NOT_FOUND_THRESHOLD`) and regex rules are at the top of `backend/analyzer.py`.
+
+**Machine learning:** an Isolation Forest model analyzes per-IP behavior (requests, failed logins, error responses, attack-pattern hits) and flags IPs that are unusual compared with the rest, including low-and-slow activity that stays below the rule thresholds. It needs at least 10 distinct IPs, so smaller logs skip it.
